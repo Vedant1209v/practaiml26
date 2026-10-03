@@ -1,0 +1,774 @@
+
+
+# 1(a). Water Jug — State Space
+
+```python
+from collections import deque
+
+def water_jug(j1, j2, target):
+    queue = deque([((0, 0), [])])
+    visited = {(0, 0)}
+
+    while queue:x
+        (a, b), path = queue.popleft()
+
+        if a == target or b == target:
+            for state in path + [(a, b)]:
+                print(state)
+            return
+
+        states = [
+            (j1, b),
+            (a, j2),
+            (0, b),
+            (a, 0),
+            (a - min(a, j2 - b), b + min(a, j2 - b)),
+            (a + min(b, j1 - a), b - min(b, j1 - a))
+        ]
+
+        for state in states:
+            if state not in visited:
+                visited.add(state)
+                queue.append((state, path + [(a, b)]))
+
+water_jug(4, 3, 2)
+```
+
+---
+
+# 1(b). Number Puzzle — State Space
+
+This example uses the **8-puzzle**.
+
+```python
+from collections import deque
+
+start = (1, 2, 3, 4, 0, 6, 7, 5, 8)
+goal = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+
+def puzzle(start, goal):
+    queue = deque([(start, [])])
+    visited = {start}
+
+    while queue:
+        state, path = queue.popleft()
+
+        if state == goal:
+            for s in path + [state]:
+                print(s[:3])
+                print(s[3:6])
+                print(s[6:])
+                print()
+            return
+
+        zero = state.index(0)
+        row = zero // 3
+        col = zero % 3
+
+        moves = []
+
+        if row > 0:
+            moves.append(zero - 3)
+        if row < 2:
+            moves.append(zero + 3)
+        if col > 0:
+            moves.append(zero - 1)
+        if col < 2:
+            moves.append(zero + 1)
+
+        for move in moves:
+            new_state = list(state)
+            new_state[zero], new_state[move] = new_state[move], new_state[zero]
+            new_state = tuple(new_state)
+
+            if new_state not in visited:
+                visited.add(new_state)
+                queue.append((new_state, path + [state]))
+
+puzzle(start, goal)
+```
+
+---
+
+# 2(a). Depth First Search
+
+```python
+graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': [],
+    'F': []
+}
+
+visited = set()
+
+def dfs(node):
+    if node not in visited:
+        print(node, end=" ")
+        visited.add(node)
+
+        for next_node in graph[node]:
+            dfs(next_node)
+
+dfs('A')
+```
+
+Output:
+
+```text
+A B D E C F
+```
+
+---
+
+# 2(b). Breadth First Search
+
+```python
+from collections import deque
+
+graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': [],
+    'F': []
+}
+
+def bfs(start):
+    visited = set()
+    queue = deque([start])
+
+    while queue:
+        node = queue.popleft()
+
+        if node not in visited:
+            print(node, end=" ")
+            visited.add(node)
+            queue.extend(graph[node])
+
+bfs('A')
+```
+
+Output:
+
+```text
+A B C D E F
+```
+
+---
+
+# 3(a). Hill Climbing
+
+```python
+def hill_climbing():
+    values = [1, 3, 5, 8, 7, 6, 4]
+    current = 0
+
+    while True:
+        next_pos = current + 1
+
+        if next_pos >= len(values):
+            break
+
+        if values[next_pos] > values[current]:
+            current = next_pos
+        else:
+            break
+
+    print("Peak value:", values[current])
+    print("Position:", current)
+
+hill_climbing()
+```
+
+---
+
+# 3(b). A* Algorithm
+
+```python
+import heapq
+
+graph = {
+    'A': [('B', 1), ('C', 3)],
+    'B': [('D', 3), ('E', 1)],
+    'C': [('F', 2)],
+    'D': [('G', 2)],
+    'E': [('G', 3)],
+    'F': [('G', 1)],
+    'G': []
+}
+
+h = {
+    'A': 6,
+    'B': 4,
+    'C': 4,
+    'D': 2,
+    'E': 2,
+    'F': 1,
+    'G': 0
+}
+
+def a_star(start, goal):
+    queue = [(h[start], 0, start, [start])]
+
+    while queue:
+        f, cost, node, path = heapq.heappop(queue)
+
+        if node == goal:
+            print("Path:", path)
+            print("Cost:", cost)
+            return
+
+        for next_node, edge_cost in graph[node]:
+            new_cost = cost + edge_cost
+            new_f = new_cost + h[next_node]
+            heapq.heappush(queue, (new_f, new_cost, next_node, path + [next_node]))
+
+a_star('A', 'G')
+```
+
+---
+
+# 4(a). 4-Queen Problem
+
+```python
+def is_safe(board, row, col):
+    for i in range(row):
+        if board[i] == col:
+            return False
+        if abs(board[i] - col) == abs(i - row):
+            return False
+    return True
+
+def solve(board, row):
+    if row == 4:
+        print(board)
+        return True
+
+    for col in range(4):
+        if is_safe(board, row, col):
+            board[row] = col
+            if solve(board, row + 1):
+                return True
+            board[row] = -1
+
+    return False
+
+board = [-1] * 4
+solve(board, 0)
+```
+
+---
+
+# 4(b). Map Coloring — Constraint Satisfaction
+
+```python
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A', 'B', 'D'],
+    'D': ['B', 'C']
+}
+
+colors = ['Red', 'Green', 'Blue']
+result = {}
+
+def valid(node, color):
+    for neighbour in graph[node]:
+        if neighbour in result and result[neighbour] == color:
+            return False
+    return True
+
+def color_map(nodes):
+    if not nodes:
+        return True
+
+    node = nodes[0]
+
+    for color in colors:
+        if valid(node, color):
+            result[node] = color
+
+            if color_map(nodes[1:]):
+                return True
+
+            del result[node]
+
+    return False
+
+color_map(list(graph.keys()))
+print(result)
+```
+
+---
+
+# 5(a). Tic-Tac-Toe using Min-Max
+
+```python
+board = [' ' for _ in range(9)]
+
+def show():
+    print(board[0], '|', board[1], '|', board[2])
+    print('--+---+--')
+    print(board[3], '|', board[4], '|', board[5])
+    print('--+---+--')
+    print(board[6], '|', board[7], '|', board[8])
+
+def winner(p):
+    wins = [
+        (0,1,2), (3,4,5), (6,7,8),
+        (0,3,6), (1,4,7), (2,5,8),
+        (0,4,8), (2,4,6)
+    ]
+
+    return any(board[a] == board[b] == board[c] == p for a,b,c in wins)
+
+def minimax(is_max):
+    if winner('O'):
+        return 1
+    if winner('X'):
+        return -1
+    if ' ' not in board:
+        return 0
+
+    if is_max:
+        best = -10
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'O'
+                best = max(best, minimax(False))
+                board[i] = ' '
+        return best
+    else:
+        best = 10
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'X'
+                best = min(best, minimax(True))
+                board[i] = ' '
+        return best
+
+def computer_move():
+    best = -10
+    move = 0
+
+    for i in range(9):
+        if board[i] == ' ':
+            board[i] = 'O'
+            score = minimax(False)
+            board[i] = ' '
+
+            if score > best:
+                best = score
+                move = i
+
+    board[move] = 'O'
+
+while True:
+    show()
+
+    pos = int(input("Enter position 1-9: ")) - 1
+
+    if board[pos] == ' ':
+        board[pos] = 'X'
+    else:
+        continue
+
+    if winner('X'):
+        show()
+        print("You win")
+        break
+
+    if ' ' not in board:
+        show()
+        print("Draw")
+        break
+
+    computer_move()
+
+    if winner('O'):
+        show()
+        print("Computer wins")
+        break
+```
+
+---
+
+# 5(b). Alpha-Beta Pruning
+
+```python
+def alphabeta(depth, index, maximizing, values, alpha, beta):
+    if depth == 3:
+        return values[index]
+
+    if maximizing:
+        best = -1000
+
+        for i in range(2):
+            value = alphabeta(depth + 1, index * 2 + i, False, values, alpha, beta)
+            best = max(best, value)
+            alpha = max(alpha, best)
+
+            if beta <= alpha:
+                break
+
+        return best
+
+    else:
+        best = 1000
+
+        for i in range(2):
+            value = alphabeta(depth + 1, index * 2 + i, True, values, alpha, beta)
+            best = min(best, value)
+            beta = min(beta, best)
+
+            if beta <= alpha:
+                break
+
+        return best
+
+values = [3, 5, 6, 9, 1, 2, 0, -1]
+
+result = alphabeta(0, 0, True, values, -1000, 1000)
+
+print("Best value:", result)
+```
+
+---
+
+# 6(a). Missionaries and Cannibals
+
+```python
+from collections import deque
+
+def valid(m, c):
+    if m < 0 or c < 0 or m > 3 or c > 3:
+        return False
+
+    if m > 0 and m < c:
+        return False
+
+    m2 = 3 - m
+    c2 = 3 - c
+
+    if m2 > 0 and m2 < c2:
+        return False
+
+    return True
+
+def solve():
+    start = (3, 3, 0)
+    goal = (0, 0, 1)
+
+    queue = deque([(start, [])])
+    visited = {start}
+
+    moves = [
+        (1,0), (2,0), (0,1),
+        (0,2), (1,1)
+    ]
+
+    while queue:
+        state, path = queue.popleft()
+        m, c, boat = state
+
+        if state == goal:
+            for s in path + [state]:
+                print(s)
+            return
+
+        for dm, dc in moves:
+            if boat == 0:
+                new_state = (m-dm, c-dc, 1)
+            else:
+                new_state = (m+dm, c+dc, 0)
+
+            if new_state not in visited:
+                if valid(new_state[0], new_state[1]):
+                    visited.add(new_state)
+                    queue.append((new_state, path + [state]))
+
+solve()
+```
+
+---
+
+# 6(b). Shuffle Deck of Cards
+
+```python
+import random
+
+suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
+         'Jack', 'Queen', 'King', 'Ace']
+
+deck = []
+
+for suit in suits:
+    for rank in ranks:
+        deck.append(rank + ' of ' + suit)
+
+random.shuffle(deck)
+
+for card in deck:
+    print(card)
+```
+
+---
+
+# 7(a). Prolog — Derive Predicate
+
+Create a file named:
+
+```text
+family.pl
+```
+
+```prolog
+batsman(sachin).
+cricketer(X) :- batsman(X).
+
+?- cricketer(sachin).
+```
+
+Expected result:
+
+```text
+true.
+```
+
+---
+
+# 7(b). Prolog Fundamentals
+
+```prolog
+male(ram).
+male(shyam).
+female(sita).
+female(gita).
+
+parent(ram, shyam).
+parent(sita, shyam).
+
+child(X, Y) :- parent(Y, X).
+```
+
+Queries:
+
+```prolog
+?- male(ram).
+?- female(sita).
+?- parent(ram, shyam).
+?- child(shyam, ram).
+```
+
+---
+
+# 8. Family Relations in Prolog
+
+```prolog
+male(ram).
+male(shyam).
+male(amit).
+male(raj).
+
+female(sita).
+female(gita).
+female(neha).
+female(rita).
+
+parent(ram, shyam).
+parent(sita, shyam).
+parent(ram, gita).
+parent(sita, gita).
+
+parent(shyam, amit).
+parent(neha, amit).
+parent(shyam, rita).
+parent(neha, rita).
+
+father(X, Y) :-
+    male(X),
+    parent(X, Y).
+
+mother(X, Y) :-
+    female(X),
+    parent(X, Y).
+
+grandfather(X, Y) :-
+    male(X),
+    parent(X, Z),
+    parent(Z, Y).
+
+grandmother(X, Y) :-
+    female(X),
+    parent(X, Z),
+    parent(Z, Y).
+
+brother(X, Y) :-
+    male(X),
+    parent(Z, X),
+    parent(Z, Y),
+    X \= Y.
+
+sister(X, Y) :-
+    female(X),
+    parent(Z, X),
+    parent(Z, Y),
+    X \= Y.
+
+uncle(X, Y) :-
+    male(X),
+    parent(Z, Y),
+    brother(X, Z).
+
+aunt(X, Y) :-
+    female(X),
+    parent(Z, Y),
+    sister(X, Z).
+
+nephew(X, Y) :-
+    male(X),
+    parent(Z, X),
+    (brother(Z, Y); sister(Z, Y)).
+
+niece(X, Y) :-
+    female(X),
+    parent(Z, X),
+    (brother(Z, Y); sister(Z, Y)).
+
+cousin(X, Y) :-
+    parent(A, X),
+    parent(B, Y),
+    (brother(A, B); sister(A, B)).
+```
+
+### Example queries
+
+```prolog
+?- father(ram, shyam).
+?- mother(sita, gita).
+?- brother(shyam, gita).
+?- sister(gita, shyam).
+?- grandfather(ram, amit).
+```
+
+---
+
+# 9(a). Linear Regression
+
+```python
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+x = np.array([[1], [2], [3], [4], [5]])
+y = np.array([2, 4, 5, 8, 10])
+
+model = LinearRegression()
+model.fit(x, y)
+
+prediction = model.predict([[6]])
+
+print("Slope:", model.coef_[0])
+print("Intercept:", model.intercept_)
+print("Prediction:", prediction[0])
+
+plt.scatter(x, y)
+plt.plot(x, model.predict(x))
+plt.show()
+```
+
+---
+
+# 9(b). Classification Problem
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+data = load_iris()
+
+x = data.data
+y = data.target
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=42
+)
+
+model = DecisionTreeClassifier()
+model.fit(x_train, y_train)
+
+prediction = model.predict(x_test)
+
+print("Accuracy:", accuracy_score(y_test, prediction))
+print("Predictions:", prediction)
+```
+
+---
+
+# 10(a). Simple Neural Network
+
+```python
+import numpy as np
+
+x = np.array([[0,0], [0,1], [1,0], [1,1]])
+y = np.array([[0], [1], [1], [0]])
+
+np.random.seed(1)
+
+w1 = np.random.randn(2, 4)
+w2 = np.random.randn(4, 1)
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+for i in range(10000):
+    h = sigmoid(np.dot(x, w1))
+    output = sigmoid(np.dot(h, w2))
+
+    error = y - output
+
+    d_output = error * output * (1 - output)
+    d_hidden = np.dot(d_output, w2.T) * h * (1 - h)
+
+    w2 += np.dot(h.T, d_output) * 0.1
+    w1 += np.dot(x.T, d_hidden) * 0.1
+
+print(np.round(output))
+```
+
+---
+
+# 10(b). Support Vector Machine
+
+```python
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+
+data = datasets.load_iris()
+
+x = data.data
+y = data.target
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=42
+)
+
+model = SVC(kernel='linear')
+model.fit(x_train, y_train)
+
+prediction = model.predict(x_test)
+
+print("Predictions:", prediction)
+print("Accuracy:", accuracy_score(y_test, prediction))
+```
+
+
